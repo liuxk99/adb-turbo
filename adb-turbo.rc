@@ -1,0 +1,67 @@
+#/bin/bash
+if [ -r "/etc/bash.bashrc" ]; then
+    . "/etc/bash.bashrc"
+fi
+
+if [ -r "$HOME/.bashrc" ]; then
+    . "$HOME/.bashrc"
+fi
+
+if [ -f "$HOME/bin/adb-turbo/adb_alias" ]; then
+    . $HOME/bin/adb-turbo/adb_alias
+fi
+
+function pkg_to_am_proc_start_RE() {
+  local pkg=$1
+  echo "am_proc_start: \[0,[0-9]+,[0-9]+,$pkg(:[^,]+)?"
+}
+
+function pkg_to_pids() {
+    local pkg=$1
+    reg_str=$(pkg_to_am_proc_start_RE "$pkg")
+    pids=$(adb logcat -v threadtime -b events -d |grep -E "$reg_str" |sed -E 's/.+am_proc_start: \[[0-9]+,([0-9]+).+/\1/g')
+    echo $pids
+}
+
+function pids_to_RE() {
+  local pids=("$@")
+  local result=""
+
+  for pid in "${pids[@]}"
+  do
+    if [ -n "$result" ]; then
+      result="$result|$pid"
+    else
+      result="$pid"
+    fi
+  done
+
+  echo "($result) +[0-9]+"
+}
+
+function pkg_to_pids_RE() {
+    local pkg=$1
+    pids_arr=$(pkg_to_pids $pkg)
+    pids_RE="$(pids_to_RE $pids_arr)"
+    echo $pids_RE
+}
+
+function adb.logcat.pkg() {
+  local pkg=$1
+  re_str="$(pkg_to_pids_RE $pkg)"
+  adb logcat -v threadtime -b all |grep -E "$re_str"
+}
+
+function adb.logcat.pkg-d() {
+  local pkg=$1
+  re_str="$(pkg_to_pids_RE $pkg)"
+  adb logcat -v threadtime -b all -d |grep -E "$re_str"
+}
+
+function adb.logcat.events_am_wm() {
+  adb logcat -v threadtime -b events |grep -E "$RE_am_wm"
+}
+
+function adb.logcat.events_am_wm-d() {
+  adb logcat -v threadtime -b events -d |grep -E "$RE_am_wm"
+}

@@ -1,0 +1,46 @@
+#!/bin/bash
+
+# regular expression for log
+RE_thread="[0-9]+ +[0-9]+ [VDIWEF]"
+RE_event="$RE_thread [a-z]+_[a-z_]+:"
+RE_am="$RE_thread am_[a-z_]+:"
+RE_wm="$RE_thread wm_[a-z_]+:"
+RE_am_wm="$RE_thread [aw]m_[a-z_]+:"
+
+# intent
+ai_action="android.intent.action"
+aia_main=${ai_action}.MAIN
+
+ai_category="android.intent.category"
+aic_default=${ai_category}.DEFAULT
+aic_home=${ai_category}.HOME
+aic_launcher=${ai_category}.LAUNCHER
+
+# default intent for am command
+launcher_intent="-a $aia_main -c $aic_launcher"
+home_intent="-a $aia_main -c $aic_home"
+
+# adb alias
+alias adbc="adb connect"
+alias adbs="adb shell"
+
+# adb shell pm aliases
+alias adbs.pm="adb shell pm"
+alias adbs.pm.query.launcher-intent="adb shell pm query-activities $launcher_intent"
+alias adbs.pm.resolve.launcher-intent="adb shell pm resolve-activity $launcher_intent"
+
+# adb shell am aliases
+alias adbs.am="adb shell am"
+alias adbs.am.start="adb shell am start"
+alias adbs.am.force-stop="adb shell am force-stop"
+alias adbs.launch-home="adb shell am start $home_intent"
+alias adbs.launch-pkg="adb shell am start $launcher_intent"
+# input aliases
+alias adbs.input.keyevent="adb shell input keyevent"
+
+# adb shell getprop aliases
+alias adbs.getprop='adb shell getprop'
+alias adbs.getprop.sysinfo='adb shell getprop |grep -E "ro.build.(version.(sdk|release)\]|type|tags|id|product)"'
+
+alias adb.logcat="adb logcat -v threadtime"
+alias adb.logcat.events="adb logcat -v threadtime -b events"
